@@ -1,0 +1,70 @@
+{
+  "project_info": {
+    "project_number": "613849827777",
+    "project_id": "adani-fse",
+    "storage_bucket": "adani-fse.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:613849827777:android:29d2956001b3e6cc7c4740",
+        "android_client_info": {
+          "package_name": "com.adani.fse"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "613849827777-3qhcgdk03orsegk86qko48trim3luhrj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.adani.fse",
+            "certificate_hash": "72ec5d10217e93033a3b958968f0a0e74ba0120c"
+          }
+        },
+        {
+          "client_id": "613849827777-mmutci2in4d1hciegf5ccennbimg0vag.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.adani.fse",
+            "certificate_hash": "f9598efe20ebfc3d91a019fc782d102e3ea563e6"
+          }
+        },
+        {
+          "client_id": "613849827777-uf2mslceu160513qv7o66pejurbj1t05.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.adani.fse",
+            "certificate_hash": "49b017e55257654e68b4ce1e8d5c63d6d97a6807"
+          }
+        },
+        {
+          "client_id": "613849827777-3khctvu4e1qs645td9k9rhp58lutihk8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAqzYA6g2R_IWeUDyOt3iD68oKvFXg0Btk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "613849827777-3khctvu4e1qs645td9k9rhp58lutihk8.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "613849827777-18s4gd8ovaeo383r3jgdp3ndrimlrrm4.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.tailored.AdaniFseApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
