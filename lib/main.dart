@@ -9,9 +9,11 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:http/http.dart';
 import 'auth/splash_screen.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+
 
 // bool shouldUseFirebaseEmulator = false;
 
@@ -143,7 +145,7 @@ class _MyAppState extends State<MyApp> {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Sysma',
       theme: ThemeData(

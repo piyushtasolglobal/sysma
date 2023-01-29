@@ -76,7 +76,7 @@ class Api{
     return Breakdown.fromJson(data);
   }
 
-  Future<Preventive>getPreventiveSchedule({userId,domain,cid,token,limit}) async {
+  Future<Preventive>getPreventiveSchedule({userId,domain,cid,token,limit,offset}) async {
     dbHelper().getDb()!.then((value) {
       value.rawDelete("DELETE FROM Schedule");
       value.rawDelete("DELETE FROM PMHistory");
@@ -84,24 +84,44 @@ class Api{
 
     var data;
     print("===========api call ================");
+
+     print("offset=>"+offset);
+     print("limit=>"+limit);
+
+    print("===========api call end================");
+
     var ctime = DateTime.now();
     final response = await post(
         Uri.parse("${domain}get_my_asset_type_schedule?user_id=$userId"),
         headers: {"Authorization":"Bearer $token","Accept":"application/json"},
          body: {
-           "limit": limit
+           "limit": limit,
+           "offset": offset
            //"maintenance_type": "preventive"
          },
       );
+
     var lctime = DateTime.now();
     try {
+
+      print("===========response call ================");
+        print("response=>===="+response.body);
+      print("===========response call end ================");
+
       data = jsonDecode(response.body);
+
+      /*if(offset > data.total)
+      {
+        print("yes");
+      }
+      else{
+        print("no");
+      }*/
+
       print("time difference -${ctime}, ${lctime}");
       print(lctime.second-ctime.second);
 
       //print(response.body);
-
-
       // print("=== preventive scedule data ===");
       // print(data);
       // List<PreventiveScheduleData> res = [];
@@ -214,6 +234,172 @@ class Api{
     }
 
      /*if(limit > 1982)
+      {
+         print(data);
+      }*/
+
+    return Preventive.fromJson(data);
+  }
+
+
+  Future<Preventive>getPreventiveSchedule_2({userId,domain,cid,token,limit,offset}) async {
+    dbHelper().getDb()!.then((value) {
+      value.rawDelete("DELETE FROM Schedule");
+      value.rawDelete("DELETE FROM PMHistory");
+    });
+
+    var data;
+    print("===========api call ================");
+
+    print("offset=>"+offset);
+    print("limit=>"+limit);
+
+    print("===========api call end================");
+
+    var ctime = DateTime.now();
+    final response = await post(
+      Uri.parse("${domain}get_my_asset_type_schedule?user_id=$userId"),
+      headers: {"Authorization":"Bearer $token","Accept":"application/json"},
+      body: {
+        //"limit": limit,
+        //"offset": offset
+        //"maintenance_type": "preventive"
+      },
+    );
+
+    var lctime = DateTime.now();
+    try {
+
+      print("===========response call ================");
+      print("response=>===="+response.body);
+      print("===========response call end ================");
+
+      data = jsonDecode(response.body);
+
+      /*if(offset > data.total)
+      {
+        print("yes");
+      }
+      else{
+        print("no");
+      }*/
+
+      print("time difference -${ctime}, ${lctime}");
+      print(lctime.second-ctime.second);
+
+      //print(response.body);
+      // print("=== preventive scedule data ===");
+      // print(data);
+      // List<PreventiveScheduleData> res = [];
+      // if (data['api_status'] == 1) {
+      //   res = data['totalAssetScheduledata'].map<PreventiveScheduleData>((json) => PreventiveScheduleData.fromJson(json)).toList();
+      //   if(res.isNotEmpty) {
+      //     SharePre.setScheduleTableStatus(0);
+      //     SharedPreferences prefs = await SharedPreferences.getInstance();
+      //     print("=== local preventive table status ====");
+      //     print(prefs.getInt('scheduleTableStatus'));
+      //     if(prefs.getInt('scheduleTableStatus') == 0 || prefs.getInt('scheduleTableStatus') == 1) {
+      //       for (int i = 0; i < res.length; i++) {
+      //         var insertData = {
+      //           'sId': res[i].id,
+      //           'auditSchduleId': res[i].auditSchduleId,
+      //           'companyId': res[i].companyId,
+      //           'assetTagId': res[i].assetTagId,
+      //           'userId': res[i].userId ?? 0,
+      //           'auditName': res[i].auditName,
+      //           'auditStatus': res[i].auditStatus,
+      //           'image': res[i].image,
+      //           'modelName': res[i].modelName,
+      //           'assetTag': res[i].assetTag,
+      //           'location': res[i].location ?? ' ',
+      //           'auditStartDate': res[i].auditStartDate != null ? res[i]
+      //               .auditStartDate.toString() : "0000-00-00 00:00",
+      //           'auditEndDate': res[i].auditEndDate != null ? res[i]
+      //               .auditEndDate.toString() : "0000-00-00 00:00",
+      //           'lastAuditDate': res[i].lastAuditDate,
+      //           'scheduleExpireDate': res[i].scheduleExpireDate != null
+      //               ? DateFormat("yyyy-MM-dd")
+      //               .format(
+      //               DateTime.parse(res[i].scheduleExpireDate.toString()))
+      //               .toString()
+      //               : "0000-00-00",
+      //           'escalatedAuditLevels': res[i].escalatedAuditLevels ?? 0,
+      //           'maintenanceType': res[i].maintenanceType,
+      //           'companyName': res[i].companyName ?? ' ',
+      //           'categoryName': res[i].categoryName ?? ' ',
+      //           'purchaseDate': res[i].purchaseDate ?? ' ',
+      //           'supplierName': res[i].supplierName ?? ' ',
+      //           'warrantyMonths': res[i].warrantyMonths ?? 0,
+      //           'canCheckout': res[i].canCheckout,
+      //           'canCheckin': res[i].canCheckin,
+      //           'auditParamsId': res[i].auditParamsId,
+      //           'auditParamsValues': jsonEncode(res[i].auditParamsValues),
+      //           'statusLabel': res[i].statusLabel ?? '',
+      //           'dueDate': res[i].dueDate ?? ''
+      //         };
+      //         await dbHelper().getDb()!.then((value) {
+      //           value.insert('Schedule', insertData);
+      //           // value.rawQuery("SELECT * From Schedule WHERE companyId=$cid")
+      //           //     .then((v) {
+      //           // if (v.isNotEmpty) {
+      //           //   for (var j in v) {
+      //           //     if (res[i].id != j['sId']) {
+      //           //       value.insert('Schedule', insertData);
+      //           //     }
+      //           //     else {
+      //           //       value.update(
+      //           //           'Schedule', insertData, where: '${j['sId']} =?',
+      //           //           whereArgs: [res[i].id.toString()]);
+      //           //     }
+      //           //   }
+      //           // } else {
+      //           //   value.insert('Schedule', insertData);
+      //           // }
+      //           // });
+      //         });
+      //         for (int h = 0; h < res[i].pmHistory!.length; h++) {
+      //           var insertPmHistory = {
+      //             'auditSchduleId': res[i].pmHistory![h].auditSchduleId,
+      //             'assetTagId': res[i].pmHistory![h].assetTagId,
+      //             'auditResult': res[i].pmHistory![h].auditResult,
+      //             'auditInspectionDate': res[i].pmHistory![h]
+      //                 .auditInspectionDate,
+      //             'auditName': res[i].pmHistory![h].auditName
+      //           };
+      //           await dbHelper().getDb()!.then((value) {
+      //             value.insert('PMHistory', insertPmHistory);
+      //             // value.rawQuery("SELECT * From PMHistory WHERE assetTagId=${res[i]
+      //             //     .assetTagId}").then((v) {
+      //             //   if (v.isNotEmpty) {
+      //             //     for (var k in v) {
+      //             //       if (res[i].pmHistory![h].auditSchduleId != k['id']) {
+      //             //         value.insert('PMHistory', insertPmHistory);
+      //             //       } else {
+      //             //         value.update(
+      //             //             'PMHistory', insertPmHistory, where: k['id'] = res[i]
+      //             //             .pmHistory![h].auditSchduleId.toString());
+      //             //       }
+      //             //     }
+      //             //   } else {
+      //             //     value.insert('PMHistory', insertPmHistory);
+      //             //   }
+      //             // });
+      //           });
+      //         }
+      //       }
+      //     }
+      //   }else{
+      //     SharePre.setScheduleTableStatus(1);
+      //   }
+      // }else {
+      //   SharePre.setScheduleTableStatus(1);
+      // }
+    }catch(e){
+      print("Error comming");
+      throw Exception('Error on server');
+    }
+
+    /*if(limit > 1982)
       {
          print(data);
       }*/
