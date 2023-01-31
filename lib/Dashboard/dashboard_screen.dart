@@ -30,6 +30,7 @@ import 'Licenses_Screen.dart';
 import 'Qrcode.dart';
 import 'Setting_screen.dart';
 import 'package:get/get.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class Dashboard extends StatefulWidget {
   String?from;
@@ -47,10 +48,14 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
 
 
 
+
+
   late int limit, offset;
 
   late num total_count;
   String str_total_cnt="";
+  String version="";
+  late String buildNumber;
   bool isLoadingMore = false;
 
   final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
@@ -81,9 +86,17 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
   void initState() {
     // TODO: implement initState
     super.initState();
+    PackageInfo.fromPlatform().then((PackageInfo packageInfo) {
+      String appName = packageInfo.appName;
+      String packageName = packageInfo.packageName;
+      setState(() {
+        version = packageInfo.version;
+      });
+      buildNumber = packageInfo.buildNumber;
+    });
+
     scrollController.addListener(_scrollListner);
     initalizePref();
-
     _tapController?.index = widget.index!;
     dateController1.text = DateFormat('yyyy-MM-dd').format(DateTime.now());
     noDataFound = 'Loading...';
@@ -97,6 +110,8 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
         offset=0;
 
         loadToLocal();
+
+
         loadCompletedToLocal();
 
         // Api().getCompletedSchedule(
@@ -141,6 +156,7 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
     ).then((value) async {
       // print(value.totalAssetScheduledata);
       setState(() {
+
         total_count = value.total!;
         prefs.setInt("totalcount", total_count.toInt());
 
@@ -312,7 +328,7 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
           }
         });
       }).whenComplete(() =>
-        print("loaded")
+          Get.find<LoadController>().load()//after insert all show record
         //callfun()
       );
     });
@@ -513,12 +529,10 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
       int? totalCount = prefs.getInt("totalcount");
       if(_offsetdb <= totalCount!)
       {
-
         int rem = totalCount - _offsetdb;
         print("_offsetdb->" +_offsetdb.toString());
         print("total_count->" +totalCount.toString());
         print("rem->" +rem.toString());
-
 
         if(rem > 100)
         {
@@ -574,18 +588,25 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
           title: const Text("Jobs / Work Orders",style: appbartitle,),
           titleSpacing: 0,
           actions:[
-            Get.find<LoadController>().preventiveScheduleData.isEmpty?
+            /*Get.find<LoadController>().preventiveScheduleData.isEmpty?
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.0),
               child: InkWell(
                 onTap:null,
                 child:  Icon(Icons.qr_code_scanner,size: 24,color: Colors.grey,),
               ),
-            ):
+            ):*/
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: InkWell(
-                onTap:(){Navigator.push(context, MaterialPageRoute(builder: (context) => const QRcodescan(),));},
+                onTap:(){ Get.find<LoadController>().preventiveScheduleData.isEmpty?
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text("Please wait while load company list"),
+                    behavior: SnackBarBehavior.floating,
+                    width: MediaQuery.of(context).size.width*0.8,
+                  ),
+                ) :Navigator.push(context, MaterialPageRoute(builder: (context) => const QRcodescan(),));},
                 child:  const Icon(Icons.qr_code_scanner,size: 24,),
               ),
             ),
@@ -718,6 +739,8 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
                     btnCancelColor: primarycolor,
                   ).show();
                 },
+              ),
+              ListTile(title: Text("Current version: $version",style: greytext,),
               ),
             ],
           ),

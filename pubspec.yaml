@@ -38,6 +38,7 @@ dependencies:
   intl: ^0.17.0
   path: ^1.8.2
   get: ^4.6.5
+  package_info_plus: ^1.0.6
   expandable_fab_menu: ^0.0.1
   flutter_speed_dial: ^6.0.0
   mobile_scanner: ^2.0.0

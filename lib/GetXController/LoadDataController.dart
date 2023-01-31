@@ -25,7 +25,7 @@ class LoadController extends GetxController{
     load_2(int limit) async
     {
       // preventiveScheduleData.clear();
-      loadPreventiveLocal_2(limit);
+       loadPreventiveLocal_2(limit);
       //update();
     }
 
@@ -85,15 +85,9 @@ class LoadController extends GetxController{
   }*/
 
 
-
-
-
-
-
-
   Future<List<PreventiveScheduleData>> loadPreventiveLocal() async{
     List<PreventiveScheduleData> preventiveScheduleData1=[];
-    dbHelper().getDb()!.then((value)
+     dbHelper().getDb()!.then((value)
     {
       value.rawQuery("SELECT * From 'Schedule' WHERE maintenanceType == 'preventive' AND auditStatus != 'completed' OR scheduleExpireDate >= '$todayTime' Limit 20").then((value) {
         for (var i in value){
@@ -143,7 +137,7 @@ class LoadController extends GetxController{
   loadPreventiveLocal_2(int offset) async
   {
     List<PreventiveScheduleData> preventiveScheduleData1=[];
-    dbHelper().getDb()!.then((value) {
+     dbHelper().getDb()!.then((value) {
       value.rawQuery("SELECT * From 'Schedule' WHERE maintenanceType == 'preventive' AND auditStatus != 'completed' OR scheduleExpireDate >= '$todayTime' Limit 100 OFFSET $offset").then((value) {
         for (var i in value){
           try {
@@ -203,7 +197,7 @@ class LoadController extends GetxController{
   loadPreventiveLocal_3(int offset, int rem) async
   {
     List<PreventiveScheduleData> preventiveScheduleData1=[];
-    dbHelper().getDb()!.then((value) {
+     dbHelper().getDb()!.then((value) {
       value.rawQuery("SELECT * From 'Schedule' WHERE maintenanceType == 'preventive' AND auditStatus != 'completed' OR scheduleExpireDate >= '$todayTime' Limit $rem OFFSET $offset").then((value) {
         for (var i in value){
           try {
@@ -258,8 +252,6 @@ class LoadController extends GetxController{
 
 
   }
-
-
 
 
 }

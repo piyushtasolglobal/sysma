@@ -74,7 +74,7 @@ class _InspectionSecondStepState extends State<InspectionSecondStep> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: Appbar().getAppbar(context, "Fill Parameters"),
+      appBar: Appbar().getAppbar(context, "Fill Parameters1"),
       body: Padding(
         padding: const EdgeInsets.only(left: 5.0,right: 5.0,bottom: 10.0),
         child: AwesomeStepper(
@@ -465,10 +465,11 @@ class _InspectionSecondStepState extends State<InspectionSecondStep> {
                         hint: selectedValue1.isNotEmpty?
                         Text(selectedValue1.toString(), style: listHeading, overflow: TextOverflow.ellipsis,):
                         const Text('Select Option', style: listHeading, overflow: TextOverflow.ellipsis,),
-                        items: e['dropdown_values'].toString().split(',').map((item) => DropdownMenuItem<String>(
-                          value: item,child: Text(item, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold,),
+                        items: e['dropdown_values'].toString().split(',').map((item)  => DropdownMenuItem<String>(
+                          value: item  ,child: Text(item, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold,),
                           overflow: TextOverflow.ellipsis,
                         ),)).toList(),
+
                         value: selectedValue2,
                         onChanged: (value) {
                           print(value);
@@ -503,6 +504,7 @@ class _InspectionSecondStepState extends State<InspectionSecondStep> {
                       ),
                     ),
                   ):
+
                   Center(child: Text('param_type = ${e['param_type']}'),),
 
                   e['param_type'] == 'Number' && selectedValue1.isNotEmpty && controller.text.isNotEmpty ?

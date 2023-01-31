@@ -18,12 +18,14 @@ const smallbuttontextstyle = TextStyle(color:white,fontSize: 16,fontWeight: Font
 const listtitle = TextStyle(fontSize: 20,fontWeight: FontWeight.w400,color: Colors.black54);
 const heading = TextStyle(fontSize: 16,fontWeight: FontWeight.w600,color: Colors.black);
 const listHeading = TextStyle(fontSize: 14,color: Colors.black,fontWeight: FontWeight.w500,);
+
 const listsubHeading = TextStyle(fontSize: 12,color: Colors.black,fontWeight: FontWeight.w300,);
 const wlistTitleHeading = TextStyle(fontSize: 14,color: Colors.white,fontWeight: FontWeight.w500,);
 const wlistsubHeading = TextStyle(fontSize: 12,color: Colors.white,fontWeight: FontWeight.w300,);
 const pricolortext = TextStyle(fontSize: 16,color: primarycolor,fontWeight: FontWeight.w500,);
 const priColorTextSmall = TextStyle(fontSize: 12,color: primarycolor,fontWeight: FontWeight.w500,);
 const greytext = TextStyle(fontSize: 12,color: Colors.grey,fontWeight: FontWeight.w500,);
+const blacktext = TextStyle(fontSize: 12,color: Colors.black,fontWeight: FontWeight.w500,);
 const greysubtext = TextStyle(fontSize: 14,color: Color(0xFFB2B0B0),fontWeight: FontWeight.w400,);
 const redtext = TextStyle(fontSize: 14,color: Colors.red,fontWeight: FontWeight.w300,);
 const bredtext = TextStyle(fontSize: 16,color: Colors.red,fontWeight: FontWeight.w500,);
