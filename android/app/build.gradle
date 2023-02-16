@@ -45,6 +45,7 @@ android {
     }
 
     defaultConfig {
+        multiDexEnabled true
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId "com.adani.fse"
         // You can update the following values to match your application needs.
@@ -75,6 +76,8 @@ dependencies {
     implementation 'com.google.mlkit:barcode-scanning:17.0.3'
     implementation 'com.google.android.gms:play-services-mlkit-barcode-scanning:18.1.0'
     implementation 'com.google.firebase:firebase-auth'
+
+
 
     implementation 'com.google.android.gms:play-services-auth:20.4.0'
     implementation 'com.google.android.gms:play-services-auth-api-phone:18.0.1'

@@ -38,17 +38,25 @@ class _InspectionPreviewState extends State<InspectionPreview> {
     assetInsValue = widget.insList.reversed.toList();
   }
   prepData(){
+
     String isData = "user_id%${DataManager.getInstance().getUserId().toString()}#audit_status%completed#audit_schedule_id%${widget.sdata!.auditSchduleId.toString()}#type%${widget.sdata!.auditStatus.toString()}#"
         "lat_long%37.785834,-122.406417#maintenance_type%${widget.sdata!.maintenanceType.toString()}#";
+
     for(var i=0; i <= assetParameterValue.length-1; i++){
-      setState((){
-        isData = "$isData${assetParameterValue[i]['id']}%${assetInsValue[i]['dropDownValue']}#";
-      });
+      if (mounted == true) {
+        setState((){
+          isData = "$isData${assetParameterValue[i]['id']}%${assetInsValue[i]['dropDownValue']}#";
+        });
+      }
+
     }
     for(var i=0; i<= assetParameterValue.length-1; i++){
-      setState((){
-        isData = "$isData${assetParameterValue[i]['id']}_comment%${assetInsValue[i]['commentValue']}#";
-      });
+      if (mounted == true) {
+        setState(() {
+          isData =
+          "$isData${assetParameterValue[i]['id']}_comment%${assetInsValue[i]['commentValue']}#";
+        });
+      }
     }
     return isData;
   }
@@ -118,7 +126,8 @@ class _InspectionPreviewState extends State<InspectionPreview> {
                                 XFile? pickedFile = await ImagePicker().pickImage(source: ImageSource.camera,);
                                 if (pickedFile != null) {
                                   assetInsValue[index]['imageValue'] = pickedFile;
-                                  setState(() {});
+                                if (mounted == true) {
+                                  setState(() {});}
                                 }
                               },
                               child: Image.file(File(assetInsValue[index]['imageValue'].path),height: 150,width: 150,),
@@ -162,48 +171,114 @@ class _InspectionPreviewState extends State<InspectionPreview> {
           ),
           onPressed: () async {
             Loading().onLoading();
-            String isImages="";
-            for (var i = 0; i <= assetParameterValue.length - 1; i++) {
-              if(assetInsValue[i]['imageValue'] != null) {
-                setState(() {
-                  isImages = "$isImages${assetParameterValue[i]['id']}_img%${assetInsValue[i]['imageValue'].path}#";
-                });
-              }
-            }
-            if(DataManager.getInstance().getConnection()){
-              Map<String, String> finalData = {
-                "data": prepData().toString(),
-                "images": isImages.toString(),
-                "assetImage": widget.assetPic.path.toString()
-              };
-              var splitedData = finalData['data']!.split('#');
-              Map<String, String> fdata = {};
-              var splitedImages = finalData['images']!.split('#');
-              for (var e = 0; e <= splitedData.length - 1; e++) {
-                var sp = splitedData[e].split('%');
-                setState(() {
-                  fdata[sp.first] = sp.last;
-                });
-              }
-              try {
-                var request = MultipartRequest('POST', Uri.parse(
-                    "${DataManager.getInstance()
-                        .getCompanyDomain()}submit_type_inspection_info"));
-                request.fields.addAll(fdata);
-                request.files.add(await MultipartFile.fromPath("asset_img", finalData['assetImage']!));
-                for (var i = 0; i < splitedImages.length - 1; i++) {
-                  var img = splitedImages[i].split('%');
-                  request.files.add(await MultipartFile.fromPath(img.first, img.last));
+            try{
+              String isImages="";
+              for (var i = 0; i <= assetParameterValue.length - 1; i++) {
+                if(assetInsValue[i]['imageValue'] != null) {
+                if (mounted == true) {
+                  setState(() {
+                    isImages = "$isImages${assetParameterValue[i]['id']}_img%${assetInsValue[i]['imageValue'].path}#";
+                  });
+                  }
                 }
-                request.headers.addAll({
-                  "Authorization": "Bearer ${DataManager.getInstance().getCompanyToken()}",
-                  "Accept": "application/json",
-                  "Content-type": "multipart/form-data"
-                });
-                print('=========server response==========');
-                var streamResponse = await request.send();
-                final responseString = await streamResponse.stream.bytesToString();
-                if (streamResponse.statusCode == 200) {
+              }
+              if(DataManager.getInstance().getConnection()){
+                Map<String, String> finalData = {
+                  "data": prepData().toString(),
+                  "images": isImages.toString(),
+                  "assetImage": widget.assetPic.path.toString()
+                };
+                var splitedData = finalData['data']!.split('#');
+                Map<String, String> fdata = {};
+                var splitedImages = finalData['images']!.split('#');
+                for (var e = 0; e <= splitedData.length - 1; e++) {
+                  var sp = splitedData[e].split('%');
+                 if (mounted == true) {
+                  setState(() {
+                    fdata[sp.first] = sp.last;
+                  });}
+                }
+                try {
+                  var request = MultipartRequest('POST', Uri.parse(
+                      "${DataManager.getInstance()
+                          .getCompanyDomain()}submit_type_inspection_info"));
+                  request.fields.addAll(fdata);
+                  request.files.add(await MultipartFile.fromPath("asset_img", finalData['assetImage']!));
+                  for (var i = 0; i < splitedImages.length - 1; i++) {
+                    var img = splitedImages[i].split('%');
+                    request.files.add(await MultipartFile.fromPath(img.first, img.last));
+                  }
+                  request.headers.addAll({
+                    "Authorization": "Bearer ${DataManager.getInstance().getCompanyToken()}",
+                    "Accept": "application/json",
+                    "Content-type": "multipart/form-data"
+                  });
+                  print('=========server response==========');
+                  var streamResponse = await request.send();
+                  final responseString = await streamResponse.stream.bytesToString();
+                  if (streamResponse.statusCode == 200)
+                  {
+                    await dbHelper().getDb()!.then((value) {
+                      value.transaction((txn) async {
+                        var batch = txn.batch();
+                        var insertData = {
+                          'auditSchduleId': widget.sdata!.auditSchduleId,
+                          'assetTagId': widget.sdata!.assetTagId,
+                          'auditName': widget.sdata!.auditName,
+                          'auditStatus': widget.sdata!.auditStatus,
+                          'image': widget.sdata!.image,
+                          'assetImage': widget.sdata!.assetImage,
+                          'modelName': widget.sdata!.modelName,
+                          'assetTag': widget.sdata!.assetTag,
+                          'location': widget.sdata!.location ?? ' ',
+                          'auditEndDate': widget.sdata!.auditEndDate,
+                          'auditInspectionDate': DateFormat('yyyy-MM-dd hh:mm:ss').format(DateTime.now()),
+                          'auditInspectionDateF': DateFormat('yyyy-MM-dd').format(DateTime.now()),
+                          'scheduleExpireDate': widget.sdata!.scheduleExpireDate != null ? DateFormat("yyyy-MM-dd")
+                              .format(
+                              DateTime.parse(widget.sdata!.scheduleExpireDate.toString()))
+                              .toString()
+                              : "0000-00-00",
+                          'escalatedAuditLevels':widget.sdata!.escalatedAuditLevels ?? 0,
+                          'maintenanceType': widget.sdata!.maintenanceType,
+                          'companyName': widget.sdata!.companyName ?? ' ',
+                          'categoryName': widget.sdata!.categoryName ?? ' ',
+                          'purchaseDate': widget.sdata!.purchaseDate ?? ' ',
+                          'supplierName': widget.sdata!.supplierName ?? ' ',
+                          'warrantyMonths': widget.sdata!.warrantyMonths ?? 0,
+                          'canCheckout': 0,
+                          'canCheckin': 0,
+                          'auditParamsValues': jsonEncode(widget.sdata!.auditParamsValues),
+                          'auditParamsTransaction': jsonEncode(widget.insParamTrans),
+                          'inspectionBy': DataManager.getInstance().getUserName(),
+                          'status':1,
+                          'insFrom':0,
+                          'response':'',
+                          'userId':DataManager.getInstance().getUserId()
+                        };
+                        batch.insert('CompletedSchedule', insertData);
+                        batch.rawDelete("DELETE From Schedule WHERE auditSchduleId = ?",[ widget.sdata!.auditSchduleId,]);
+                        await batch.commit();
+                      });
+                    });
+                    final dynamic jsonMap = json.decode(responseString);
+                    print(jsonMap);
+                    Loading().onSuccess(msg: jsonMap['api_message']);
+                    Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => Dashboard(index: 2,from: 'inspection'),), (route) => false);
+                  }
+                  else {
+                    final dynamic jsonMap = json.decode(responseString);
+                    print(jsonMap);
+                    Loading().onError(msg: jsonMap['message']);
+                  }
+                }catch(e){
+                  print(e);
+                }
+              }
+              else{
+                Api().saveInspectionInfo(Demo(data: prepData().toString(),
+                    images: isImages,
+                    assetImage: widget.assetPic.path)).then((resValue) async {
                   await dbHelper().getDb()!.then((value) {
                     value.transaction((txn) async {
                       var batch = txn.batch();
@@ -218,14 +293,19 @@ class _InspectionPreviewState extends State<InspectionPreview> {
                         'assetTag': widget.sdata!.assetTag,
                         'location': widget.sdata!.location ?? ' ',
                         'auditEndDate': widget.sdata!.auditEndDate,
-                        'auditInspectionDate': DateFormat('yyyy-MM-dd hh:mm:ss').format(DateTime.now()),
-                        'auditInspectionDateF': DateFormat('yyyy-MM-dd').format(DateTime.now()),
-                        'scheduleExpireDate': widget.sdata!.scheduleExpireDate != null ? DateFormat("yyyy-MM-dd")
+                        'auditInspectionDate': DateFormat('yyyy-MM-dd hh:mm:ss')
+                            .format(DateTime.now()),
+                        'auditInspectionDateF': DateFormat('yyyy-MM-dd').format(
+                            DateTime.now()),
+                        'scheduleExpireDate': widget.sdata!.scheduleExpireDate !=
+                            null ? DateFormat("yyyy-MM-dd")
                             .format(
-                            DateTime.parse(widget.sdata!.scheduleExpireDate.toString()))
+                            DateTime.parse(
+                                widget.sdata!.scheduleExpireDate.toString()))
                             .toString()
                             : "0000-00-00",
-                        'escalatedAuditLevels':widget.sdata!.escalatedAuditLevels ?? 0,
+                        'escalatedAuditLevels': widget.sdata!
+                            .escalatedAuditLevels ?? 0,
                         'maintenanceType': widget.sdata!.maintenanceType,
                         'companyName': widget.sdata!.companyName ?? ' ',
                         'categoryName': widget.sdata!.categoryName ?? ' ',
@@ -234,95 +314,34 @@ class _InspectionPreviewState extends State<InspectionPreview> {
                         'warrantyMonths': widget.sdata!.warrantyMonths ?? 0,
                         'canCheckout': 0,
                         'canCheckin': 0,
-                        'auditParamsValues': jsonEncode(widget.sdata!.auditParamsValues),
-                        'auditParamsTransaction': jsonEncode(widget.insParamTrans),
+                        'auditParamsValues': jsonEncode(
+                            widget.sdata!.auditParamsValues),
+                        'auditParamsTransaction': jsonEncode(
+                            widget.insParamTrans),
                         'inspectionBy': DataManager.getInstance().getUserName(),
-                        'status':1,
-                        'insFrom':0,
-                        'response':'',
-                        'userId':DataManager.getInstance().getUserId()
+                        'status': 0,
+                        'insFrom': 0,
+                        'response': '',
+                        'userId': DataManager.getInstance().getUserId()
                       };
+                      // batch.insert('InspectedSchedule', insertData);
                       batch.insert('CompletedSchedule', insertData);
-                      batch.rawDelete("DELETE From Schedule WHERE auditSchduleId = ?",[ widget.sdata!.auditSchduleId,]);
+                      batch.rawDelete(
+                          "DELETE From Schedule WHERE auditSchduleId = ?",
+                          [ widget.sdata!.auditSchduleId,]);
                       await batch.commit();
                     });
                   });
-                  final dynamic jsonMap = json.decode(responseString);
-                  print(jsonMap);
-                  Loading().onSuccess(msg: jsonMap['api_message']);
-                  Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => Dashboard(index: 2,from: 'inspection'),), (route) => false);
-                }
-                else {
-                  final dynamic jsonMap = json.decode(responseString);
-                  print(jsonMap);
-                  Loading().onError(msg: jsonMap['message']);
-                }
-              }catch(e){
-                print(e);
+                  Loading().onSuccess(msg: "Inspection Saved Locally");
+                  Navigator.pushAndRemoveUntil(context, MaterialPageRoute(
+                    builder: (context) => Dashboard(index: 2,from: 'inspection'),), (
+                      route) => false);
+                });
               }
             }
-            else{
-              Api().saveInspectionInfo(Demo(data: prepData().toString(),
-                  images: isImages,
-                  assetImage: widget.assetPic.path)).then((resValue) async {
-                await dbHelper().getDb()!.then((value) {
-                  value.transaction((txn) async {
-                    var batch = txn.batch();
-                    var insertData = {
-                      'auditSchduleId': widget.sdata!.auditSchduleId,
-                      'assetTagId': widget.sdata!.assetTagId,
-                      'auditName': widget.sdata!.auditName,
-                      'auditStatus': widget.sdata!.auditStatus,
-                      'image': widget.sdata!.image,
-                      'assetImage': widget.sdata!.assetImage,
-                      'modelName': widget.sdata!.modelName,
-                      'assetTag': widget.sdata!.assetTag,
-                      'location': widget.sdata!.location ?? ' ',
-                      'auditEndDate': widget.sdata!.auditEndDate,
-                      'auditInspectionDate': DateFormat('yyyy-MM-dd hh:mm:ss')
-                          .format(DateTime.now()),
-                      'auditInspectionDateF': DateFormat('yyyy-MM-dd').format(
-                          DateTime.now()),
-                      'scheduleExpireDate': widget.sdata!.scheduleExpireDate !=
-                          null ? DateFormat("yyyy-MM-dd")
-                          .format(
-                          DateTime.parse(
-                              widget.sdata!.scheduleExpireDate.toString()))
-                          .toString()
-                          : "0000-00-00",
-                      'escalatedAuditLevels': widget.sdata!
-                          .escalatedAuditLevels ?? 0,
-                      'maintenanceType': widget.sdata!.maintenanceType,
-                      'companyName': widget.sdata!.companyName ?? ' ',
-                      'categoryName': widget.sdata!.categoryName ?? ' ',
-                      'purchaseDate': widget.sdata!.purchaseDate ?? ' ',
-                      'supplierName': widget.sdata!.supplierName ?? ' ',
-                      'warrantyMonths': widget.sdata!.warrantyMonths ?? 0,
-                      'canCheckout': 0,
-                      'canCheckin': 0,
-                      'auditParamsValues': jsonEncode(
-                          widget.sdata!.auditParamsValues),
-                      'auditParamsTransaction': jsonEncode(
-                          widget.insParamTrans),
-                      'inspectionBy': DataManager.getInstance().getUserName(),
-                      'status': 0,
-                      'insFrom': 0,
-                      'response': '',
-                      'userId': DataManager.getInstance().getUserId()
-                    };
-                    // batch.insert('InspectedSchedule', insertData);
-                    batch.insert('CompletedSchedule', insertData);
-                    batch.rawDelete(
-                        "DELETE From Schedule WHERE auditSchduleId = ?",
-                        [ widget.sdata!.auditSchduleId,]);
-                    await batch.commit();
-                  });
-                });
-                Loading().onSuccess(msg: "Inspection Saved Locally");
-                Navigator.pushAndRemoveUntil(context, MaterialPageRoute(
-                  builder: (context) => Dashboard(index: 2,from: 'inspection'),), (
-                    route) => false);
-              });
+            catch(e)
+            {
+              print(e);
             }
           },
           child: const Text("Submit",style: buttontextstyle),

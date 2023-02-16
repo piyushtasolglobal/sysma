@@ -3,6 +3,8 @@ import 'package:adani/controllar/data_manager.dart';
 import 'package:adani/models/Breakdown.dart';
 import 'package:flutter/material.dart';
 
+import '../controllar/Apis.dart';
+
 class breakdown extends StatefulWidget {
   const breakdown({Key? key}) : super(key: key);
   @override
@@ -19,21 +21,22 @@ class _breakdownState extends State<breakdown> {
     super.initState();
     Future.delayed(const Duration(seconds: 1),() {
       setState(() {
+       // loadBreakdown();
         noDataFound='No Data Available!';
       });
     });
   }
 
-  // loadBreakdown(){
-  //   Api().getBreakdownSchedule(userId: DataManager.getInstance().getUserId(),domain: DataManager.getInstance().getCompanyDomain()).then((value){
-  //     setState(() {
-  //       breakdownScheduleData = value.totalAssetScheduledata!;
-  //     });
-  //     setState(() {
-  //       noDataFound='No Data Available!';
-  //     });
-  //   });
-  // }
+   loadBreakdown(){
+     Api().getBreakdownSchedule(/*userId: DataManager.getInstance().getUserId(),domain: DataManager.getInstance().getCompanyDomain()*/).then((value){
+       setState(() {
+         breakdownScheduleData = value.totalAssetScheduledata!;
+       });
+       setState(() {
+         noDataFound='No Data Available!';
+       });
+     });
+   }
 
   @override
   Widget build(BuildContext context) {

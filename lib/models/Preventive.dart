@@ -6,6 +6,7 @@ import 'dart:convert';
 
 Preventive preventiveFromJson(String str) => Preventive.fromJson(json.decode(str));
 String preventiveToJson(Preventive data) => json.encode(data.toJson());
+
 class Preventive {
   Preventive({
       num? apiStatus, 
@@ -18,7 +19,8 @@ class Preventive {
     _totalAssetScheduledata = totalAssetScheduledata;
 }
 
-  Preventive.fromJson(dynamic json) {
+  Preventive.fromJson(dynamic json)
+  {
     _apiStatus = json['api_status'];
     _apiMessage = json['api_message'];
     _total = json['total'];
@@ -34,7 +36,8 @@ class Preventive {
   num? _total;
   int? tot;
   List<PreventiveScheduleData>? _totalAssetScheduledata;
-Preventive copyWith({  num? apiStatus,
+
+  Preventive copyWith({  num? apiStatus,
   String? apiMessage,
   num? total,
   List<PreventiveScheduleData>? totalAssetScheduledata,
@@ -46,6 +49,7 @@ Preventive copyWith({  num? apiStatus,
   num? get apiStatus => _apiStatus;
   String? get apiMessage => _apiMessage;
   num? get total => _total;
+
   List<PreventiveScheduleData>? get totalAssetScheduledata => _totalAssetScheduledata;
 
   Map<String, dynamic> toJson() {
@@ -94,7 +98,9 @@ Preventive copyWith({  num? apiStatus,
 
 PreventiveScheduleData totalAssetScheduledataFromJson(String str) => PreventiveScheduleData.fromJson(json.decode(str));
 String totalAssetScheduledataToJson(PreventiveScheduleData data) => json.encode(data.toJson());
-class PreventiveScheduleData {
+
+class PreventiveScheduleData
+{
   PreventiveScheduleData({
       String? maintenanceType, 
       num? auditSchduleId, 

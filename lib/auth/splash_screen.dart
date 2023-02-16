@@ -3,10 +3,12 @@ import 'dart:async';
 import 'package:adani/Dashboard/dashboard_screen.dart';
 import 'package:adani/auth/sign_in.dart';
 import 'package:adani/controllar/data_manager.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:adani/auth/login_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../Dashboard/Notification_Listpage.dart';
 import '../Utils/Styles.dart';
 
 class splash extends StatefulWidget {
@@ -17,20 +19,40 @@ class splash extends StatefulWidget {
 }
 
 class _splashState extends State<splash> {
-  
+
+  late final FirebaseMessaging _messaging;
+  late bool is_paramget;
+  late SharedPreferences prefs ;
+
   @override
   void initState(){
     super.initState();
+
+   // Navigator.push(context,MaterialPageRoute(builder: (context) =>Notification_List()));
+
+
     getValidate();
   }
+
+
 
   getValidate()async{
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var id = prefs.getString("companyId");
-    if(id == null || id == ""){
+
+    bool? is_paramget = prefs.getBool("is_paramget");
+
+    /*if(is_paramget==true)
+    {
+      prefs.setBool("is_paramget", false);
+      //Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Notification_List(),));
+    }*/
+   if(id == null || id == "")
+   {
       Timer(const Duration (seconds: 2),()=>Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const login(),)));
       // Timer(const Duration (seconds: 2),()=>Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const SignInScreen(),)));
-    }else{
+    }
+   else{
       DataManager.getInstance().setFileUrl(prefs.getString('fileUrl'));
       DataManager.getInstance().setInspectedFileUrl(prefs.getString('inspectedFileUrl'));
       DataManager.getInstance().setAudioUrl(prefs.getString('audioUrl'));

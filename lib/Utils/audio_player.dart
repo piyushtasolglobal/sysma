@@ -21,28 +21,30 @@ class _audioplayState extends State<audioplay> {
   Duration position = Duration.zero;
   String url ="";
 
-
   @override
   void initState() {
     super.initState();
     setAudio();
     /// Listen to states: playing, paused, stopped
     audioPlayer.onPlayerStateChanged.listen((state) {
+      if (mounted == true) {
       setState(() {
         isPlaying = state == PlayerState.playing;
-      });
+      });}
     });
     /// Listen to audio duration
     audioPlayer.onDurationChanged.listen((newDuration) {
+      if (mounted == true) {
       setState(() {
         duration = newDuration;
-      });
+      });}
     });
     /// Listen to audio position
     audioPlayer.onPositionChanged.listen((newPosition) {
+      if (mounted == true) {
       setState(() {
         position = newPosition;
-      });
+      });}
     });
   }
 

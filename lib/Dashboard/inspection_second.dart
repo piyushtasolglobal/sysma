@@ -74,7 +74,7 @@ class _InspectionSecondStepState extends State<InspectionSecondStep> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: Appbar().getAppbar(context, "Fill Parameters1"),
+      appBar: Appbar().getAppbar(context, "Fill Parameters"),
       body: Padding(
         padding: const EdgeInsets.only(left: 5.0,right: 5.0,bottom: 10.0),
         child: AwesomeStepper(
@@ -93,10 +93,11 @@ class _InspectionSecondStepState extends State<InspectionSecondStep> {
                   margin: const EdgeInsets.only(left: 17),
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 55.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 40.0),
                       backgroundColor: Colors.grey[300],
                     ),
                     onPressed: currentPage > 0 ? (){
+                    if (mounted == true) {
                       setState(() {
                         assetParamTrans[currentPage]['audit_param_value']='';
                         assetParamTrans[currentPage]['inspection_img']='';
@@ -108,7 +109,7 @@ class _InspectionSecondStepState extends State<InspectionSecondStep> {
                         dateController.clear();
                         remarkController.clear();
                         controller.clear();
-                      });
+                      });}
                       jsonData.removeLast();
                       onBack();
                     }: null,
@@ -119,7 +120,7 @@ class _InspectionSecondStepState extends State<InspectionSecondStep> {
                   margin: const EdgeInsets.only(right: 17),
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 65.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 50.0),
                       backgroundColor: primarycolor,
                     ),
                     onPressed:currentPage < totalPage ? (){
@@ -139,6 +140,7 @@ class _InspectionSecondStepState extends State<InspectionSecondStep> {
                                     : null
                               });
 
+                            if (mounted == true) {
                               setState(() {
                                 assetParamTrans[currentPage]['audit_param_value']=selectedValue1;
                                 assetParamTrans[currentPage]['inspection_img']=insImg;
@@ -151,7 +153,7 @@ class _InspectionSecondStepState extends State<InspectionSecondStep> {
                                 remarkController.clear();
                                 dateController.clear();
                                 controller.clear();
-                              });
+                              });}
                               currentPage < totalPage - 1 ?
                               onNext() :
                               Navigator.push(context, MaterialPageRoute(builder: (context) =>
@@ -174,6 +176,7 @@ class _InspectionSecondStepState extends State<InspectionSecondStep> {
                                   ? commentController1.text
                                   : null
                             });
+                         if (mounted == true) {
                             setState(() {
                               assetParamTrans[currentPage]['audit_param_value']=selectedValue1;
                               assetParamTrans[currentPage]['inspection_img']=insImg;
@@ -186,7 +189,7 @@ class _InspectionSecondStepState extends State<InspectionSecondStep> {
                               remarkController.clear();
                               dateController.clear();
                               controller.clear();
-                            });
+                            });}
                             currentPage < totalPage - 1 ?
                             onNext() :
                             Navigator.push(context, MaterialPageRoute(builder: (context) =>
@@ -207,6 +210,7 @@ class _InspectionSecondStepState extends State<InspectionSecondStep> {
                                     ? commentController1.text
                                     : null
                               });
+                          if (mounted == true) {
                               setState(() {
                                 assetParamTrans[currentPage]['audit_param_value']=selectedValue1;
                                 assetParamTrans[currentPage]['inspection_img']=insImg;
@@ -219,7 +223,7 @@ class _InspectionSecondStepState extends State<InspectionSecondStep> {
                                 remarkController.clear();
                                 dateController.clear();
                                 controller.clear();
-                              });
+                              });}
                               currentPage < totalPage - 1 ?
                               onNext() :
                               Navigator.push(context, MaterialPageRoute(builder: (context) =>
@@ -242,6 +246,7 @@ class _InspectionSecondStepState extends State<InspectionSecondStep> {
                                   ? commentController1.text
                                   : null
                             });
+                         if (mounted == true) {
                             setState(() {
                               assetParamTrans[currentPage]['audit_param_value']=selectedValue1;
                               assetParamTrans[currentPage]['inspection_img']=insImg;
@@ -254,7 +259,7 @@ class _InspectionSecondStepState extends State<InspectionSecondStep> {
                               remarkController.clear();
                               dateController.clear();
                               controller.clear();
-                            });
+                            });}
                             currentPage < totalPage - 1 ?
                             onNext() :
                             Navigator.push(context, MaterialPageRoute(builder: (context) =>
@@ -276,9 +281,10 @@ class _InspectionSecondStepState extends State<InspectionSecondStep> {
             );
           },
           onStepChanged: (page) {
+            if (mounted == true) {
             setState(() {
               currentPage = page;
-            });
+            });}
             print(assetParamTrans);
           },
           steps:getStep(assetParameterValue.reversed),
@@ -333,12 +339,13 @@ class _InspectionSecondStepState extends State<InspectionSecondStep> {
                         }
                         // else if(value != RegExp('[.]')){}
                         else{
+                        if (mounted == true) {
                           setState(() {
                             selectedValue1 = value;
                             brlVal = e['benchmark_range_low'].toString();
                             brhVal = e['benchmark_range_high'].toString();
                             dropRejVal = e['dropdown_reject_value'];
-                          });
+                          });}
                         }
                       },
                       decoration:InputDecoration(
@@ -420,9 +427,10 @@ class _InspectionSecondStepState extends State<InspectionSecondStep> {
                         }
                       },
                       onChanged: (value) {
+                      if (mounted == true) {
                         setState(() {
                           selectedValue1 = value;
-                        });
+                        });}
                       },
                       maxLines: 5,
                       decoration:InputDecoration(
@@ -473,10 +481,11 @@ class _InspectionSecondStepState extends State<InspectionSecondStep> {
                         value: selectedValue2,
                         onChanged: (value) {
                           print(value);
+                          if (mounted == true) {
                           setState(() {
                             selectedValue1 = value.toString();
                             dropRejVal = e['dropdown_reject_value'];
-                          });
+                          });}
                         },
                         icon: const Icon(Icons.arrow_drop_down_outlined,),
                         iconSize: 24,
@@ -641,17 +650,26 @@ class _InspectionSecondStepState extends State<InspectionSecondStep> {
 
   /// Get image from gallery or Camera
   _getImage1({source}) async {
-    XFile? pickedFile = await ImagePicker().pickImage(source: source,
-        maxHeight: 300,
-        maxWidth: 150,
-        imageQuality: 50);
-    if (pickedFile != null) {
-      setState(() {
-        selectedImage1 = pickedFile;
-        File file = File(pickedFile.path);
-        insImg = base64Encode(file.readAsBytesSync());
-      });
+    try{
+      XFile? pickedFile = await ImagePicker().pickImage(source: source,
+          maxHeight: 300,
+          maxWidth: 150,
+          imageQuality: 50);
+      if (pickedFile != null) {
+        if (mounted == true) {
+        setState(() {
+          selectedImage1 = pickedFile;
+          File file = File(pickedFile.path);
+          insImg = base64Encode(file.readAsBytesSync());
+        });}
+      }
     }
+    catch(e)
+    {
+      print(e);
+    }
+
+
   }
 
   ///Method for showing the date picker
@@ -669,12 +687,13 @@ class _InspectionSecondStepState extends State<InspectionSecondStep> {
         //if user tap cancel then this function will stop
         return;
       }
+      if (mounted == true) {
       setState(() {
         dateController.text = DateFormat('yyyy-MM-dd').format(pickedDate);
         selectedValue1 = DateFormat('yyyy-MM-dd').format(pickedDate);
         //for rebuilding the ui
         // _selectedDate = pickedDate;
-      });
+      });}
     });
   }
 }

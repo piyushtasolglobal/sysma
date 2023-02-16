@@ -22,11 +22,27 @@
           }
         },
         {
+          "client_id": "613849827777-58t04u39b6hraudu417juknpu9i21i6q.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.adani.fse",
+            "certificate_hash": "d849c44a31699094be2222b29f6f1e7c9a973a4a"
+          }
+        },
+        {
           "client_id": "613849827777-mmutci2in4d1hciegf5ccennbimg0vag.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.adani.fse",
             "certificate_hash": "f9598efe20ebfc3d91a019fc782d102e3ea563e6"
+          }
+        },
+        {
+          "client_id": "613849827777-u9mihkfk7nhf5ns4lnkhfu19ia8v3hvo.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.adani.fse",
+            "certificate_hash": "c2ad7e1af31cb832d6e3a167a945c04b0f8d0406"
           }
         },
         {

@@ -96,18 +96,27 @@ class _TakeAuditImageState extends State<TakeAuditImage> {
     );
   }
   _getImage1({source}) async {
-    XFile? pickedFile = await ImagePicker().pickImage(source: source,maxHeight: 300,
-        maxWidth: 150,
-        imageQuality: 50);
+    try{
+      XFile? pickedFile = await ImagePicker().pickImage(source: source,maxHeight: 300,
+          maxWidth: 150,
+          imageQuality: 50);
 
-    if (pickedFile != null) {
-      setState(() {
-        selectedImage = pickedFile;
-        // imagePath = pickedFile.path;
-        File file = File(pickedFile.path);
-        String base64Encoded = base64Encode(file.readAsBytesSync());
-        widget.insParamTrans[0]['audit_asset_image'] = base64Encoded;
-      });
+      if (pickedFile != null) {
+        setState(() {
+          selectedImage = pickedFile;
+          // imagePath = pickedFile.path;
+          File file = File(pickedFile.path);
+          String base64Encoded = base64Encode(file.readAsBytesSync());
+          widget.insParamTrans[0]['audit_asset_image'] = base64Encoded;
+        });
+      }
     }
+    catch(e) {
+      //code
+      print(e);
+    }
+
+
+
   }
 }

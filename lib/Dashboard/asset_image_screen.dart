@@ -43,9 +43,8 @@ class _Asset_imageState extends State<Asset_image> {
   List<PmHistory> pmHistory=[];
   loadPmHistoryLocal(id){
     pmHistory.clear();
-    dbHelper().getDb()!.then((value) {
-      value.rawQuery("SELECT * From PMHistory WHERE auditSchduleId=$id").then((value){ // old query wriiten previously
-       //value.rawQuery("SELECT DISTINCT auditSchduleId,assetTagId,auditName,auditInspectionDate,auditResult  From PMHistory WHERE auditSchduleId=$id").then((value){
+     dbHelper().getDb()!.then((value) {
+       value.rawQuery("SELECT * From PMHistory WHERE auditSchduleId=$id").then((value){ // old query wriiten previously
         for (var i in value){
           setState(() {
             pmHistory.add(PmHistory(

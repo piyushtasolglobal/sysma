@@ -23,19 +23,26 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../GetXController/LoadDataController.dart';
 import '../auth/login_screen.dart';
+import '../models/Workorder3.dart';
 import 'Asset_Status/assets_status.dart';
 import 'CategoryList_screen.dart';
 import 'Components_screen.dart';
 import 'Licenses_Screen.dart';
+import 'Notification_Listpage.dart';
 import 'Qrcode.dart';
 import 'Setting_screen.dart';
 import 'package:get/get.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import 'inspection_first.dart';
+import 'package:http/http.dart' as http;
+
 class Dashboard extends StatefulWidget {
   String?from;
   int?index;
   Dashboard({Key? key, required this.index, this.from}) : super(key: key);
+
+
 
   @override
   State<Dashboard> createState() => _DashboardState();
@@ -46,11 +53,8 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
   final scrollController = ScrollController();
   final controller = Get.put(LoadController());
 
-
-
-
-
   late int limit, offset;
+  bool ispullrefresh=false;
 
   late num total_count;
   String str_total_cnt="";
@@ -74,18 +78,24 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
   TabController? _tapController;
   int? tableStatus;
   List<PreventiveScheduleData> res = [];
+  List workorders = [];
   List<CompletedScheduleData> resComplete = [];
 
   // Fetching the first 20 posts
   int _offsetdb = 20;
 
   late SharedPreferences prefs;
+  //String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+ // String todayTime = DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now());
+
 
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    initalizePref();
+
     PackageInfo.fromPlatform().then((PackageInfo packageInfo) {
       String appName = packageInfo.appName;
       String packageName = packageInfo.packageName;
@@ -96,11 +106,15 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
     });
 
     scrollController.addListener(_scrollListner);
-    initalizePref();
+
     _tapController?.index = widget.index!;
     dateController1.text = DateFormat('yyyy-MM-dd').format(DateTime.now());
     noDataFound = 'Loading...';
     noDataFound1 = 'Loading...';
+
+   //loadToWorkorders();
+    //Get.find<LoadController>().load_test();
+
 
     if(widget.from == 'companyPage')
     {
@@ -110,8 +124,6 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
         offset=0;
 
         loadToLocal();
-
-
         loadCompletedToLocal();
 
         // Api().getCompletedSchedule(
@@ -138,9 +150,208 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
 
   }
 
+
+
   initalizePref() async
   {
     prefs = await SharedPreferences.getInstance();
+    bool? is_paramget = prefs.getBool("is_paramget");
+    if(is_paramget==true)
+    {
+      prefs.setBool("is_paramget", false);
+      //await Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Notification_List(),));
+    }
+
+  }
+
+  Future<void> getWorkOrders({domain,cid,token}) async
+  {
+    dbHelper().getDb()!.then((value) {
+      value.rawDelete("DELETE FROM Workorders");
+      value.rawDelete("DELETE FROM WoSupporters");
+      value.rawDelete("DELETE FROM WoCauses");
+      value.rawDelete("DELETE FROM WoMedia");
+      value.rawDelete("DELETE FROM WoParameters");
+      value.rawDelete("DELETE FROM WoParamconfig");
+    });
+
+    var data;
+    //var ctime = DateTime.now();
+    final response = await http.get(
+      /*Uri.parse("${domain}maintenance/workorders/index")*/
+      Uri.parse("https://zrclive.sysmatech.com/api/v1/maintenance/workorders/index") ,
+      headers: {"Authorization":"Bearer $token","Accept":"application/json"},
+      /*body: {
+        //"limit": limit,
+        //"offset": offset
+        //"maintenance_type": "preventive"
+      },*/
+    );
+
+    var lctime = DateTime.now();
+    try {
+      //print("===========response call ================");
+      //print("response=>===="+response.body);
+      //print("===========response call end ================");
+
+      data = jsonDecode(response.body);
+      //print("time difference -${ctime}, ${lctime}");
+      //print(lctime.second-ctime.second);
+
+    }catch(e){
+      print("Error comming");
+      throw Exception('Error on server');
+    }
+    //data = jsonDecode(response.body);
+    var jsonData = jsonDecode(response.body);
+    workorders =  jsonData['rows'];
+
+    await dbHelper().getDb()!.then((value) {
+      value.transaction((txn) async {
+        var batch1 = txn.batch();
+        var batch2 = txn.batch();
+        var batch3 = txn.batch();
+        var batch4 = txn.batch();
+        var batch5 = txn.batch();
+
+        for(int i=0; i<workorders.length; i++)
+        {
+          var insertData = {
+            // 'sId': res[i].id,
+            'workorders_id': workorders[i]['id'],
+            'ticket_id': workorders[i]['ticket_id'],
+            'title': workorders[i]['title'],
+            'due_date': workorders[i]['due_date']['date'],
+            'description': workorders[i]['description'],
+            'priority_id': workorders[i]['priority_id'],
+            'priority': workorders[i]['priority'],
+            'category_id': workorders[i]['selected_category']['id'],
+            'category': workorders[i]['selected_category']['text'],
+            'assignee_id': workorders[i]['selected_assignee']['id'],
+            'assignee_name': workorders[i]['selected_assignee']['text'],
+            'status_id': workorders[i]['selected_status']['id'],
+            'status_text': workorders[i]['selected_status']['text'],
+            // 'location': workorders[i]['selected_location']['text'],
+            'created_at': workorders[i]['created_at']['formatted'],
+            'updated_at': workorders[i]['updated_at']['formatted'],
+          };
+
+          batch1.insert('Workorders', insertData);
+
+          if(workorders[i]['selected_causes'].length > 0)
+          {
+            for (int j = 0; j < workorders[i]['selected_causes'].length; j++)
+            {
+              var insertData_c = {
+                // 'sId': res[i].id,
+                'workorders_id': workorders[i]['id'],
+                'wocauses_id': workorders[i]['selected_causes'][j]['id'],
+                'name': workorders[i]['selected_causes'][j]['text'],
+                'cause_name': workorders[i]['selected_causes'][j]['cause_name']
+              };
+              batch2.insert('WoCauses', insertData_c);
+            }
+          }
+
+          if(workorders[i]['media'].length > 0)
+          {
+            for (int j = 0; j < workorders[i]['media'].length; j++)
+            {
+              var insertData_m = {
+                // 'sId': res[i].id,
+                'workorders_id': workorders[i]['id'],
+                'womedias_id': workorders[i]['media'][j]['id'],
+                'name': workorders[i]['media'][j]['name'],
+                'url': workorders[i]['media'][j]['url']
+              };
+              batch3.insert('WoMedia', insertData_m);
+            }
+          }
+
+          if(workorders[i]['checklist']['parameters'].length > 0)
+          {
+            for (int j = 0; j < workorders[i]['checklist']['parameters'].length; j++)
+            {
+              var insertData_parameter = {
+                // 'sId': res[i].id,
+                'workorders_id': workorders[i]['id'],
+                'woparameters_id': workorders[i]['checklist']['parameters'][j]['id'],
+                'param_disp_name': workorders[i]['checklist']['parameters'][j]['param_disp_name'],
+                'param_type': workorders[i]['checklist']['parameters'][j]['param_type'],
+                'is_inspected': workorders[i]['checklist']['parameters'][j]['is_inspected'],
+              };
+              batch4.insert('WoParameters', insertData_parameter);
+
+
+               if(workorders[i]['checklist']['parameters'][j]['param_type'] == "Number")
+               {
+                 var insertData_paramconfig = {
+                   'woparameters_id': workorders[i]['checklist']['parameters'][j]['id'],
+                   'b_range_low': workorders[i]['checklist']['parameters'][j]['param_config']['benchmark_range_low'],
+                   'b_range_high': workorders[i]['checklist']['parameters'][j]['param_config']['benchmark_range_high'],
+                   'dropval_aphotos': workorders[i]['checklist']['parameters'][j]['param_config']['dropdown_values_accept_photos_validation'],
+                   'dropval_acomment': workorders[i]['checklist']['parameters'][j]['param_config']['dropdown_values_accept_comment_validation'],
+                   'dropval_rphotos': workorders[i]['checklist']['parameters'][j]['param_config']['dropdown_values_reject_photos_validation'],
+                   'dropval_rcomment': workorders[i]['checklist']['parameters'][j]['param_config']['dropdown_values_reject_comment_validation'],
+                 };
+                 batch5.insert('WoParamconfig', insertData_paramconfig);
+               }
+               else if(workorders[i]['checklist']['parameters'][j]['param_type'] == "Drop-down")
+               {
+                 if(workorders[i]['checklist']['parameters'][j]['param_config'].length > 0)
+                 {
+                   for (int k = 0; k < workorders[i]['checklist']['parameters'].length; k++)
+                   {
+                     var insertData_paramconfig = {
+                       // 'sId': res[i].id,
+                       'woparameters_id': workorders[i]['checklist']['parameters'][j]['id'],
+                       'woparamconfig_id': workorders[i]['checklist']['parameters'][j]['param_config'][k]['id'],
+                       'type': workorders[i]['checklist']['parameters'][j]['param_config'][k]['type'],
+                       'key': workorders[i]['checklist']['parameters'][j]['param_config'][k]['key'],
+                       'value': workorders[i]['checklist']['parameters'][j]['param_config'][k]['value'],
+                       'photos': workorders[i]['checklist']['parameters'][j]['param_config'][k]['photos'],
+                       'comment': workorders[i]['checklist']['parameters'][j]['param_config'][k]['comment']
+                     };
+                       batch5.insert('WoParamconfig', insertData_paramconfig);
+                   }
+                 }
+               }
+            }
+          }
+
+        }
+        await batch1.commit();
+        await batch2.commit();
+        await batch3.commit();
+        await batch4.commit();
+        await batch5.commit();
+
+        });
+    });
+
+
+  }
+
+  loadToWorkorders(){
+    //print(DataManager.getInstance().getCompanyDomain().toString());
+    getWorkOrders(
+      token: "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI1IiwianRpIjoiM2VhODljYWE4YzdjMWQ2YTgyNjAyYmE1MjA1NzI2NDQ0MmZiNTNhNjczMDU4Zjg1MTIyYTVjMmU0YzA0YWVlNzBkMjdjMDNlMWM1MjBmNjUiLCJpYXQiOjE2NjgxNDgxMzEsIm5iZiI6MTY2ODE0ODEzMSwiZXhwIjoyMTQxNTMzNzMxLCJzdWIiOiIxIiwic2NvcGVzIjpbXX0.ITj6NaujUQSBjUyNssb9eakuXSiqQaGqRbrCWywp0yLykiZCVOllVpM1zIi5R6H218sa8uPY8TKVhn32nIvoAHfBmBl4qnBvrmnuJVHkVSfYC6qqBBuU3bXRw6kK5e7IhDtORJcHNxuEXpz8uu8DjsbMln2fnz6rxuI7af7579-cyyfvkBP-GMU9-wecV2jaiyXZHIy1B_N6DKQ7IakQ-X96F2qNU1hNEYpWQDu756DI17LN-GQ6GeHK5JAaWY3Vc52a3pDdJpDFk7-eFLBomOKok5rQO4TUoLxa4_rUAblGASNNXYijtXYGntjyiw_ma2UDfoavZ4s0G_o3x86Mq3Wx-o9xIUGGPU4bqLFNX7APdezSmULEnnH7LDuJlrFN1wBP49gWFxs6q7I3s44XveLtHQEc_nrlhkkju_VYIOBGjsxTiXGOoRuFBUaJ4rXHsP4sWCNDwohugzaW1REk35gEDYBKX4toxGPi6QN0WK109IaLEufU8o8hct8-2OoIPRFkIv9IE--lqqYMXogxJ_F6bVjzsIONZ3xBGrWXzyQ8JBbvbpxKKbe1ZDooA8qFN7s_DqdRmOS88x7WZi6r5raVHKycpMGkmcNwo2VjMEiHC4nVA_AEEB9L457Z83-GO2KMiRWejesVZrGrZPWE2muA0gnq2NPGLaqy-gfIn9s",
+      domain: DataManager.getInstance().getCompanyDomain().toString(),
+      cid: DataManager.getInstance().getCompanyId().toString(),
+      //limit: limit.toString(),
+      //offset: offset.toString(),
+
+    ).then((value) async {
+     // print(value);
+      //var jsonData = jsonDecode(value.body);
+      //workorders =  jsonData['rows'];
+      setState(() {
+
+        //workorders =  jsonData['rows'];
+        noDataFound = 'Loading...';
+      });
+
+    });
   }
 
   loadToLocal(){
@@ -150,16 +361,13 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
       userId: DataManager.getInstance().getUserId().toString(),
       domain: DataManager.getInstance().getCompanyDomain().toString(),
       cid: DataManager.getInstance().getCompanyId().toString(),
-      limit: limit.toString(),
-      offset: offset.toString(),
+
 
     ).then((value) async {
       // print(value.totalAssetScheduledata);
       setState(() {
-
         total_count = value.total!;
         prefs.setInt("totalcount", total_count.toInt());
-
 
         //total_count = int.parse(str as String);
         res = value.totalAssetScheduledata!;
@@ -205,7 +413,9 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
               'statusLabel': res[i].statusLabel ?? '',
               'dueDate': res[i].dueDate ?? ''
             };
+
             batch1.insert('Schedule', insertData);
+
             for (int h = 0; h < res[i].pmHistory!.length; h++)
             {
               var insertPmHistory = {
@@ -253,7 +463,6 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
       // print(value.totalAssetScheduledata);
       setState(() {
         total_count = value.total!;
-
         //total_count = int.parse(str as String);
         res = value.totalAssetScheduledata!;
         noDataFound = 'Loading...';
@@ -664,6 +873,13 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
                   Navigator.push(context, MaterialPageRoute(builder: (context) => const Accessories(),));
                 },
               ),
+              ListTile(leading: const Icon(Icons.keyboard_alt_outlined,color: black,),
+                title: const Text("Notification List",style: listHeading,),
+                onTap: (){
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (context) =>  Notification_List(),));
+                },
+              ),
               ListTile(leading: const Icon(Icons.water_drop,color: black,),
                 title: const Text("Consumables",style: listHeading,),
                 onTap: (){
@@ -790,27 +1006,29 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
                             iconMargin: EdgeInsets.zero,
                             child: Row(
                               children: const [
-                                Icon(Icons.person,),
-                                SizedBox(width: 5,),
-                                Text("Breakdown"),
+                                Icon(Icons.person,
+                                size: 18.0,),
+                                SizedBox(width: 3,),
+                                Text("Breakdown",
+                                style: TextStyle(fontSize: 13)),
                               ],
                             ),
                           ),
                           Tab(
                             icon: Row(
                               children: const [
-                                Icon(Icons.person,),
-                                SizedBox(width: 5,),
-                                Text("Preventive",),
+                                Icon(Icons.person,size: 18.0,),
+                                SizedBox(width: 3,),
+                                Text("Preventive",style: TextStyle(fontSize: 13)),
                               ],
                             ),
                           ),
                           Tab(
                             icon: Row(
                               children: const [
-                                Icon(Icons.person,),
-                                SizedBox(width: 5,),
-                                Text("Completed",),
+                                Icon(Icons.person,size: 18.0),
+                                SizedBox(width: 3,),
+                                Text("Completed",style: TextStyle(fontSize: 13)),
                               ],
                             ),
                           ),
@@ -950,10 +1168,10 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
                                     {
                                       var data = loadcontroller.preventiveScheduleData[index];
                                       return InkWell(
-                                        onTap: (){
+                                        /*onTap: (){
                                           List<PreventiveScheduleData> temp = [data];
-                                          Navigator.push(context, MaterialPageRoute(builder: (context) => Asset_image(assetScheduleData: temp),));
-                                        },
+                                          Navigator.push(context, MaterialPageRoute(builder: (context) => Asset_image(assetScheduleData: temp) *//*InspectionFirstStep(auditScheduleId: data.auditSchduleId)*//*,));
+                                        },*/
                                         child: Container(
                                           padding: const EdgeInsets.symmetric(vertical: 5.0),
                                           decoration: const BoxDecoration(
@@ -967,11 +1185,17 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
                                                 height: 100,
                                                 width: 80,
                                                 child: Center(
-                                                  child: CachedNetworkImage(
-                                                    placeholder: (context, url) => const Image(image: AssetImage('assets/placeholder.png')),
-                                                    imageUrl: data.image=='noimg.png'?
-                                                    '${data.assetImage}':'${DataManager.getInstance().getFileUrl()}${data.image}',
-                                                    errorWidget: (context, url, error) => const Image(image: AssetImage('assets/placeholder.png')),
+                                                  child: GestureDetector(
+                                                    onTap: () {
+                                                      List<PreventiveScheduleData> temp = [data];
+                                                      Navigator.push(context, MaterialPageRoute(builder: (context) => Asset_image(assetScheduleData: temp) ,));
+                                                      },
+                                                    child: CachedNetworkImage(
+                                                      placeholder: (context, url) => const Image(image: AssetImage('assets/placeholder.png')),
+                                                      imageUrl: data.image=='noimg.png'?
+                                                      '${data.assetImage}':'${DataManager.getInstance().getFileUrl()}${data.image}',
+                                                      errorWidget: (context, url, error) => const Image(image: AssetImage('assets/placeholder.png')),
+                                                    ),
                                                   ),
                                                 ),
                                               ),
@@ -981,11 +1205,20 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
                                                   children: [
                                                     Container(
                                                       margin:const EdgeInsets.only(left: 0.0),
-                                                      child: Text("${data.auditName}",style: pricolortext,textAlign: TextAlign.left,overflow: TextOverflow.ellipsis,maxLines: 2,),
+                                                      child: GestureDetector(
+                                                          onTap: () {
+                                                            //List<PreventiveScheduleData> temp = [data];
+                                                            Navigator.push(context, MaterialPageRoute(builder: (context) => InspectionFirstStep(auditScheduleId: data.auditSchduleId) ,));
+                                                          },
+                                                          child: Text("${data.auditName?.replaceAll(RegExp('&amp;'), '&')}",style: pricolortext,textAlign: TextAlign.left,overflow: TextOverflow.ellipsis,maxLines: 2,)),
                                                     ),
                                                     Padding(
                                                       padding: const EdgeInsets.only(left: 5.0),
                                                       child: Text("${data.modelName} - ${data.assetTag}",style: greytext,),
+                                                    ),
+                                                    Padding(
+                                                      padding: const EdgeInsets.only(left: 5.0),
+                                                      child: Text("Audit schedule id - ${data.auditSchduleId}",style: greytext,),
                                                     ),
                                                     Row(
                                                       mainAxisAlignment: MainAxisAlignment.start,
@@ -994,13 +1227,37 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
                                                         Flexible(child: Text("${data.location}",style: greysubtext,))
                                                       ],
                                                     ),
+
                                                     Row(
                                                       mainAxisAlignment: MainAxisAlignment.start,
                                                       children: [
-                                                        const Icon(Icons.access_time,size: 20,color: grey_400,),
-                                                        data.auditStatus == "Pending"?
+                                                         Icon(Icons.access_time,size: 18,color: grey_400,),
+
+                                                         if(comparedate(todayTime,data.auditEndDate.toString())== 2)...[
+                                                             Text("Overdue",style: redtext,),
+                                                             Text(" ${DateFormat("dd-MM-yy hh:mm aa").format(DateTime.parse(data.scheduleExpireDate.toString()))}",style: greysubtext,)
+                                                           ]
+                                                         else if(comparedate(todayTime,data.auditEndDate.toString())== 1)...
+                                                           [
+                                                             Text("Due",style: redtext,),
+                                                             Text(" ${DateFormat("dd-MM-yy hh:mm aa").format(DateTime.parse(data.auditEndDate.toString()))}",style: greysubtext,)
+                                                           ]
+                                                        else...[
+                                                             Text("Due",style: redtext,),
+                                                             Text(" ${DateFormat("dd-MM-yy hh:mm aa").format(DateTime.parse(data.auditEndDate.toString()))}",style: greysubtext,)
+                                                           ]
+
+                                                         /*comparedate(todayTime,data.auditEndDate.toString())== 2 ?
+                                                           Text("Overdue",style: redtext,) :
+                                                           Text("Due",style: redtext,),
+
+                                                          comparedate(todayTime,data.auditEndDate.toString())== 2 ?
+                                                          Text(" ${DateFormat("dd-MM-yy hh:mm aa").format(DateTime.parse(data.scheduleExpireDate.toString()))}",style: greysubtext,):
+                                                          Text(" ${DateFormat("dd-MM-yy hh:mm aa").format(DateTime.parse(data.auditEndDate.toString()))}",style: greysubtext,)
+                                                          */
+                                                        /* data.auditStatus == "Pending" ?
                                                         const Text("Due",style: redtext,):Text(capitalize(" ${data.auditStatus}"),style: redtext,),
-                                                        Text(" ${DateFormat("dd-MM-yyyy hh:mm aa").format(DateTime.parse(data.auditStartDate.toString()))}",style: greysubtext,)
+                                                        Text(" ${DateFormat("dd-MM-yy hh:mm aa").format(DateTime.parse(data.auditEndDate.toString()))}",style: greysubtext,)*/
                                                       ],
                                                     ),
                                                     data.escalatedAuditLevels!.isNotEmpty || data.escalatedAuditLevels!=''?
@@ -1035,57 +1292,90 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
                             height: MediaQuery.of(context).size.height,
                             child: Column(
                               children: [
-                                Align(
-                                  alignment: Alignment.topRight,
-                                  child: Container(
-                                    margin: const EdgeInsets.only(right: 8),
-                                    height: 35,
-                                    width: 140,
-                                    decoration: const BoxDecoration(
-                                      border: Border(bottom: BorderSide(color: grey_400),),
-                                    ),
-                                    child: InkWell(
-                                      onTap: () async {
-                                        DateTime? pickedDate = await showDatePicker(
-                                            context: context,
-                                            initialDate: DateTime.now(),
-                                            firstDate: DateTime(1900),
-                                            lastDate: DateTime(2101));
-                                        if (pickedDate != null) {
-                                          String formattedDate = DateFormat('dd-MM-yyyy').format(pickedDate);
-                                          String formattedDate2 = DateFormat('yyyy-MM-dd').format(pickedDate);
-                                          setState((){
-                                            dateController1.text = formattedDate2;
-                                            dateController.text = formattedDate;
-                                            noDataFound1='Loading...';
-                                          });
-                                          loadCompleted(dateController1.text);
-                                          Future.delayed(const Duration(seconds: 1),() {
-                                            setState(() {
-                                              noDataFound1='No Data Available!';
-                                            });
-                                          },);
-                                        } else {
-                                          print("Date is not selected");
-                                        }
-                                      },
-                                      child: TextFormField(
-                                        controller: dateController,
-                                        readOnly: true,
-                                        enabled: false,
-                                        style: title,
-                                        decoration: InputDecoration(
-                                          suffixIcon: const Icon(Icons.arrow_drop_down_outlined, size: 24,color: primarycolor,),
-                                          suffixIconConstraints: const BoxConstraints(maxWidth:20),
-                                          contentPadding: const EdgeInsets.symmetric(vertical: 0,horizontal: 5),
-                                          hintText:DateFormat('dd-MM-yyyy').format(DateTime.now()),
-                                          hintStyle: title,
-                                          enabledBorder: InputBorder.none,
+                                Container(
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+
+                                      Align(
+                                        alignment: Alignment.topLeft,
+                                        child: Container(
+                                          margin: const EdgeInsets.only(left: 10),
+                                          child: ElevatedButton(
+                                              child: const Text("Refresh",style: TextStyle(fontWeight: FontWeight.w500,color: Colors.white,fontSize: 12),),
+                                              onPressed: () {
+                                                if(DataManager.getInstance().getConnection()){
+                                                  /*setState(() {
+                                                ispullrefresh=true;
+                                              });*/
+                                                  loadCompletedToLocal();
+                                                }
+                                              },
+                                              style: ElevatedButton.styleFrom(
+                                                primary: const Color(0xFFff6634),
+                                                padding: EdgeInsets.all(10), // Set padding
+                                              )
+                                          ),
                                         ),
                                       ),
-                                    ),
+
+                                      Align(
+                                        alignment: Alignment.topRight,
+
+                                        child: Container(
+                                          margin: const EdgeInsets.only(right: 8),
+                                          height: 35,
+                                          width: 140,
+                                          decoration: const BoxDecoration(
+                                            border: Border(bottom: BorderSide(color: grey_400),),
+                                          ),
+                                          child: InkWell(
+                                            onTap: () async {
+                                              DateTime? pickedDate = await showDatePicker(
+                                                  context: context,
+                                                  initialDate: DateTime.now(),
+                                                  firstDate: DateTime(1900),
+                                                  lastDate: DateTime(2101));
+                                              if (pickedDate != null) {
+                                                String formattedDate = DateFormat('dd-MM-yyyy').format(pickedDate);
+                                                String formattedDate2 = DateFormat('yyyy-MM-dd').format(pickedDate);
+                                                setState((){
+                                                  dateController1.text = formattedDate2;
+                                                  dateController.text = formattedDate;
+                                                  noDataFound1='Loading...';
+                                                });
+                                                loadCompleted(dateController1.text);
+                                                Future.delayed(const Duration(seconds: 1),() {
+                                                  setState(() {
+                                                    noDataFound1='No Data Available!';
+                                                  });
+                                                },);
+                                              } else {
+                                                print("Date is not selected");
+                                              }
+                                            },
+                                            child: TextFormField(
+                                              controller: dateController,
+                                              readOnly: true,
+                                              enabled: false,
+                                              style: title,
+                                              decoration: InputDecoration(
+                                                suffixIcon: const Icon(Icons.arrow_drop_down_outlined, size: 24,color: primarycolor,),
+                                                suffixIconConstraints: const BoxConstraints(maxWidth:20),
+                                                contentPadding: const EdgeInsets.symmetric(vertical: 0,horizontal: 5),
+                                                hintText:DateFormat('dd-MM-yyyy').format(DateTime.now()),
+                                                hintStyle: title,
+                                                enabledBorder: InputBorder.none,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+
+                                    ],
                                   ),
                                 ),
+
                                 Flexible(
                                   child:
                                   RefreshIndicator(
@@ -1094,7 +1384,10 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
                                     onRefresh: (){
                                       return Future.delayed(const Duration(milliseconds: 500),(){
                                         if(DataManager.getInstance().getConnection()){
-                                          loadCompletedToLocal();
+                                         /*setState(() {
+                                             ispullrefresh=true;
+                                           });
+                                          loadCompletedToLocal();*/
                                           // Api().getCompletedSchedule(
                                           //   date: DateFormat('yyyy-MM-dd').format(DateTime.now()),
                                           //   userId: DataManager.getInstance().getUserId(),
@@ -1185,6 +1478,10 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
                                                             padding: const EdgeInsets.only(left: 5.0),
                                                             child: Text("${data.modelName} - ${data.assetTag}",style: greytext,),
                                                           ),
+                                                          Padding(
+                                                            padding: const EdgeInsets.only(left: 5.0),
+                                                            child: Text("Audit schedule id - ${data.auditSchduleId}",style: greytext,),
+                                                          ),
                                                           Row(children:[
                                                             const Icon(Icons.location_on,size: 17,color: grey_400,),
                                                             data.location != null?Text(" Location : ${data.location}",style: greysubtext,):
@@ -1200,7 +1497,7 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
                                                           Row(children: [
                                                             const Icon(Icons.person,size: 20,color: grey_400,),
                                                             const Text("Inspected by :",style: redtext,),
-                                                            Text(data.inspectionBy.toString(),style: greysubtext,overflow: TextOverflow.ellipsis,),
+                                                            Flexible(child: Text(data.inspectionBy.toString(),style: greysubtext,overflow: TextOverflow.ellipsis,maxLines: 2)),
                                                             const Spacer(),
                                                             data.status == 0?
                                                             const Icon(Icons.done_all,size: 20,color: grey_400,):
@@ -1406,6 +1703,61 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
 
 
   }
+
+
+  int comparedate(String current_date, String audit_enddate)
+  {
+    //data.auditName?.replaceAll(RegExp('&amp;'), '&')
+    audit_enddate = audit_enddate.replaceAll(RegExp('T'), ' ');
+    audit_enddate = audit_enddate.replaceAll(RegExp('Z'), '');
+    //print("cdate R->"+current_date);
+    //print("edate R->"+audit_enddate);
+
+    int val = -1;
+    //DateTime cureent_date_dt1 = DateTime.parse(current_date);
+    //DateTime end_date_dt2 = new DateFormat("yyyy-MM-dd").parse(audit_enddate);
+
+    DateTime cureent_date_dt1 = new DateFormat("yyyy-MM-dd hh:mm").parse(current_date);
+    DateTime end_date_dt2 = new DateFormat("yyyy-MM-dd hh:mm").parse(audit_enddate);
+
+    String date1 = DateFormat("yyyy-MM-dd hh:mm").format(cureent_date_dt1);
+    String date2 = DateFormat("yyyy-MM-dd hh:mm").format(end_date_dt2);
+
+    //print("cdate-P>"+date1);
+    print("edate-P>"+date2);
+    //DateTime dt2 = DateTime.parse(audit_enddate);
+
+    if(cureent_date_dt1.isBefore(end_date_dt2))
+    {
+       val=1;
+    }
+    else if(cureent_date_dt1.isAfter(end_date_dt2))
+    {
+        val=2;
+    }
+    else if(cureent_date_dt1.isAtSameMomentAs(end_date_dt2))
+    {
+      val=0;
+    }
+
+    /*if (cureent_date_dt1.compareTo(end_date_dt2) == 0) {
+      print("Both date time are at same moment.");
+      val=0;
+    }
+
+    if (cureent_date_dt1.compareTo(end_date_dt2) < 0) {
+      print("DT1 is before DT2");
+      val=1;
+    }
+
+    if (cureent_date_dt1.compareTo(end_date_dt2) > 0) {
+      print("DT1 is after DT2");
+      val=2;
+    }
+*/
+    return val;
+  }
+
 
 
 }

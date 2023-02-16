@@ -55,7 +55,7 @@ class _Inspection_detailsState extends State<Inspection_details> {
                 ),
               ):
               InkWell(
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => FullImageScreen(status: widget.scheduleData!.status!.toInt(),url:"${assetParameterValue.first['audit_asset_image']}",),)),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => FullImageScreen(status: /*widget.scheduleData!.status!.toInt()*/0,url:"${assetParameterValue.first['audit_asset_image']}",),)),
                 child: Container(
                   margin: const EdgeInsets.only(left:0,right: 10 ),
                   height: 120,
@@ -145,7 +145,7 @@ class _Inspection_detailsState extends State<Inspection_details> {
                           ),
                         ):
                         InkWell(
-                          onTap:()=>Navigator.push(context, MaterialPageRoute(builder: (context) => FullImageScreen(status: widget.scheduleData!.status!.toInt(),url: "${data['inspection_img']}",),)),
+                          onTap:()=>Navigator.push(context, MaterialPageRoute(builder: (context) => FullImageScreen(status: /*widget.scheduleData!.status!.toInt()*/ 0,url: "${data['inspection_img']}",),)),
                           child: Container(
                             margin: const EdgeInsets.only(left:0,right: 0,top: 5,bottom: 5 ),
                             height: 120,

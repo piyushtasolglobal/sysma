@@ -53,13 +53,18 @@ dependencies:
   dropdown_button2: ^1.8.2
   audioplayers: ^1.1.0
   pagination_view: ^2.0.0
+
   #local db
   sqflite: ^2.1.0
 
   #firebase
   firebase_crashlytics: ^3.0.9
   firebase_core: ^2.4.1
+  firebase_messaging: ^14.2.1
+  flutter_local_notifications: ^9.2.0
+  overlay_support: ^2.1.0
   firebase_auth: ^4.2.4
+
 #  firebase_phone_auth_handler: ^1.0.6
 
 

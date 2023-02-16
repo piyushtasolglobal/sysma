@@ -27,6 +27,29 @@ class dbHelper{
 
         // preventive Schedule Table
         await db.execute("CREATE TABLE Schedule(id INTEGER PRIMARY KEY AUTOINCREMENT,auditSchduleId INTEGER ,assetTagId INTEGER ,auditName TEXT,auditStatus TEXT, image TEXT,assetImage TEXT, modelName TEXT, assetTag TEXT, location TEXT, auditEndDate DATETIME, auditStartDate DATETIME, scheduleExpireDate DATETIME, escalatedAuditLevels TEXT, maintenanceType TEXT, companyName TEXT, categoryName TEXT, purchaseDate DATETIME, supplierName TEXT, warrantyMonths INTEGER,canCheckout INTEGER,canCheckin INTEGER, auditParamsValues TEXT, statusLabel TEXT, dueDate TEXT)",);
+
+        //Work orders schema start
+
+        // workorder table
+        await db.execute("CREATE TABLE Workorders(id INTEGER PRIMARY KEY AUTOINCREMENT, workorders_id INTEGER ,ticket_id TEXT ,title TEXT, due_date TEXT, description TEXT,priority_id INTEGER, priority TEXT, category_id INTEGER, category TEXT, assignee_id INTEGER, assignee_name TEXT, status_id INTEGER, status_text TEXT, asset_id INTEGER, asset_name TEXT, asset_working_status  TEXT, location TEXT, created_at DATETIME, updated_at DATETIME)",);
+
+        //workorder supoirtee table
+        await db.execute("CREATE TABLE WoSupporters(id INTEGER PRIMARY KEY AUTOINCREMENT,workorders_id INTEGER ,wosupporters_id INTEGER, name TEXT)",);
+
+        //workorder cause
+        await db.execute("CREATE TABLE WoCauses(id INTEGER PRIMARY KEY AUTOINCREMENT,workorders_id INTEGER, wocauses_id INTEGER, name TEXT ,cause_name TEXT)",);
+
+        //workorder media
+        await db.execute("CREATE TABLE WoMedia(id INTEGER PRIMARY KEY AUTOINCREMENT, workorders_id INTEGER, womedias_id INTEGER ,name TEXT, url TEXT)",);
+
+        //workorder parameters
+        await db.execute("CREATE TABLE WoParameters(id INTEGER PRIMARY KEY AUTOINCREMENT,workorders_id INTEGER , woparameters_id INTEGER, param_disp_name TEXT, param_type TEXT, is_inspected TEXT)",);
+
+        //wororder param config
+        await db.execute("CREATE TABLE WoParamconfig(id INTEGER PRIMARY KEY AUTOINCREMENT, woparameters_id INTEGER , woparamconfig_id INTEGER, type TEXT, key TEXT, value TEXT, photos TEXT, comment TEXT,  b_range_low TEXT, b_range_high TEXT, dropval_aphotos TEXT, dropval_acomment TEXT, dropval_rphotos TEXT, dropval_rcomment TEXT)",);
+
+        //Work orders schema end
+
         // completed Schedule Table
         await db.execute("CREATE TABLE CompletedSchedule(id INTEGER PRIMARY KEY AUTOINCREMENT,auditSchduleId INTEGER ,assetTagId INTEGER ,auditName TEXT,auditStatus TEXT, image TEXT,assetImage TEXT, modelName TEXT, assetTag TEXT, location TEXT, auditEndDate DATETIME, scheduleExpireDate DATETIME, escalatedAuditLevels TEXT, maintenanceType TEXT, companyName TEXT, categoryName TEXT, purchaseDate TEXT,lastAuditDate DATETIME,auditInspectionDate DATETIME,auditInspectionDateF DATETIME, supplierName TEXT, warrantyMonths INTEGER,canCheckout INTEGER,canCheckin INTEGER, auditParamsValues TEXT,auditParamsTransaction TEXT, inspectionBy TEXT,status INTEGER,response TEXT,userId INTEGER,insFrom INTEGER)",);
         // pm_History Table
