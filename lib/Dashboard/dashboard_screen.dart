@@ -113,7 +113,7 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
     noDataFound1 = 'Loading...';
 
    //loadToWorkorders();
-    //Get.find<LoadController>().load_test();
+    Get.find<LoadController>().load_test();
 
 
     if(widget.from == 'companyPage')
